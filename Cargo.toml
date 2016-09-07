@@ -1,0 +1,8 @@
+[package]
+name = "natrix"
+version = "0.1.0"
+authors = ["Tuomas Siipola <siiptuo@kapsi.fi>"]
+
+[dependencies]
+sdl2 = "0.22.0"
+rand = "0.3"
