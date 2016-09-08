@@ -3,6 +3,7 @@ extern crate rand;
 
 use std::thread;
 use std::time::Duration;
+use std::path::Path;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
@@ -12,6 +13,59 @@ use sdl2::render::{Renderer, Texture};
 use sdl2::surface::Surface;
 
 use rand::{thread_rng, Rng};
+
+struct Font {
+    texture: Texture,
+    characters: [Character; 256],
+}
+
+#[derive(Copy, Clone, PartialEq)]
+struct Character {
+    x: u32,
+    width: u32,
+}
+
+impl Font {
+    fn load_bmp<P: AsRef<Path>>(renderer: &mut Renderer, path: P) -> Font {
+        let mut characters = [Character { x: 0, width: 0 }; 256];
+        let mut surface = Surface::load_bmp(path).unwrap();
+        surface.with_lock(|pixels| {
+            let mut count = 0;
+            let mut last_x = 0;
+
+            for (x, color) in pixels[3 as usize..(surface.width() * 3) as usize]
+                .chunks(3)
+                .enumerate() {
+                if color == [255, 0, 255] {
+                    characters[count].x = (last_x + 1) as u32;
+                    characters[count].width = (x - last_x) as u32;
+                    count += 1;
+                    last_x = x + 1;
+                }
+            }
+        });
+        surface.set_color_key(true, Color::RGB(211, 203, 207)).unwrap();
+        Font {
+            texture: renderer.create_texture_from_surface(surface).unwrap(),
+            characters: characters,
+        }
+    }
+
+    fn draw(&self, renderer: &mut Renderer, x: i32, y: i32, text: &str) {
+        let mut position = x;
+        for byte in text.bytes() {
+            position += if byte == ' ' as u8 {
+                2
+            } else {
+                let character = self.characters[byte as usize - '!' as usize];
+                renderer.copy(&self.texture,
+                              Some(Rect::new(character.x as i32, 0, character.width, 10)),
+                              Some(Rect::new(position, y, character.width, 9)));
+                character.width as i32
+            }
+        }
+    }
+}
 
 #[derive(Copy, Clone, PartialEq)]
 enum Direction {
@@ -43,7 +97,7 @@ enum Tile {
     SnakeTail(Direction),
 }
 
-type Map = [[Tile; 24]; 32];
+type Map = [[Tile; 23]; 32];
 
 struct SnakeEnd {
     x: i32,
@@ -87,10 +141,11 @@ impl Snake {
 }
 
 fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i32) {
+    let target_rect = Rect::new(x * 10, 10 + y * 10, 10, 10);
     match map[x as usize][y as usize] {
         Tile::Empty => {
             renderer.set_draw_color(Color::RGB(255, 255, 255));
-            renderer.fill_rect(Rect::new(x * 10, y * 10, 10, 10)).unwrap();
+            renderer.fill_rect(target_rect).unwrap();
         }
         tile => {
             renderer.copy(&tiles,
@@ -119,7 +174,7 @@ fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i
                                          0,
                                          10,
                                          10)),
-                          Some(Rect::new(x * 10, y * 10, 10, 10)));
+                          Some(target_rect));
         }
     }
 }
@@ -127,7 +182,7 @@ fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i
 fn place_food(map: &mut Map, renderer: &mut Renderer, tiles: &Texture) {
     let mut rng = thread_rng();
     loop {
-        let (x, y) = (rng.gen_range(0, 32), rng.gen_range(0, 24));
+        let (x, y) = (rng.gen_range(0, 32), rng.gen_range(0, 23));
         if map[x as usize][y as usize] != Tile::Empty {
             continue;
         }
@@ -151,14 +206,22 @@ fn main() {
     let tiles = renderer.create_texture_from_surface(Surface::load_bmp("data/tiles.bmp").unwrap())
         .unwrap();
 
+    let font = Font::load_bmp(&mut renderer, "data/NeoSans.bmp");
+
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut snake = Snake::new(5, 5, Direction::Right);
 
-    let mut map: Map = [[Tile::Empty; 24]; 32];
+    let mut map: Map = [[Tile::Empty; 23]; 32];
+
+    let mut score = 0;
 
     renderer.set_draw_color(Color::RGB(255, 255, 255));
     renderer.clear();
+
+    renderer.set_draw_color(Color::RGB(0, 0, 0));
+    renderer.fill_rect(Rect::new(0, 0, 320, 10)).unwrap();
+    font.draw(&mut renderer, 1, 0, &format!("Score: {}", score));
 
     place_food(&mut map, &mut renderer, &tiles);
 
@@ -230,6 +293,8 @@ fn main() {
             Tile::Food => {
                 place_food(&mut map, &mut renderer, &tiles);
                 snake.grow += 5;
+                score += 1;
+                font.draw(&mut renderer, 1, 0, &format!("Score: {}", score));
             }
             Tile::SnakeVertical |
             Tile::SnakeHorizontal |
