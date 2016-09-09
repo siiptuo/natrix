@@ -108,10 +108,34 @@ struct SnakeEnd {
 impl SnakeEnd {
     fn update(&mut self) {
         match self.direction {
-            Direction::Up => self.y -= 1,
-            Direction::Right => self.x += 1,
-            Direction::Down => self.y += 1,
-            Direction::Left => self.x -= 1,
+            Direction::Up => {
+                if self.y == 0 {
+                    self.y = 23 - 1;
+                } else {
+                    self.y -= 1;
+                }
+            }
+            Direction::Right => {
+                if self.x == 32 - 1 {
+                    self.x = 0;
+                } else {
+                    self.x += 1;
+                }
+            }
+            Direction::Down => {
+                if self.y == 23 - 1 {
+                    self.y = 0;
+                } else {
+                    self.y += 1;
+                }
+            }
+            Direction::Left => {
+                if self.x == 0 {
+                    self.x = 32 - 1;
+                } else {
+                    self.x -= 1;
+                }
+            }
         }
     }
 }
