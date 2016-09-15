@@ -4,6 +4,10 @@ extern crate rand;
 use std::thread;
 use std::time::Duration;
 use std::path::Path;
+use std::io::BufReader;
+use std::io::prelude::*;
+use std::fs::File;
+use std::env;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
@@ -89,6 +93,7 @@ impl Direction {
 #[derive(Copy, Clone, PartialEq)]
 enum Tile {
     Empty,
+    Wall,
     Food,
     SnakeVertical,
     SnakeHorizontal,
@@ -97,7 +102,48 @@ enum Tile {
     SnakeTail(Direction),
 }
 
-type Map = [[Tile; 23]; 32];
+struct Map {
+    name: String,
+    tiles: [[Tile; 23]; 32],
+    snake_x: usize,
+    snake_y: usize,
+}
+
+impl Map {
+    fn new() -> Map {
+        Map {
+            name: "Default".to_string(),
+            tiles: [[Tile::Empty; 23]; 32],
+            snake_x: 5,
+            snake_y: 5,
+        }
+    }
+
+    fn load<P: AsRef<Path>>(path: P) -> Map {
+        let f = BufReader::new(File::open(path).unwrap());
+        let mut lines = f.lines();
+        let name = lines.next().unwrap().unwrap();
+        let mut tiles = [[Tile::Empty; 23]; 32];
+        let mut snake_x = 0;
+        let mut snake_y = 0;
+        for (y, line) in lines.enumerate() {
+            for (x, c) in line.unwrap().chars().enumerate() {
+                 match c {
+                    'X' => tiles[x][y] = Tile::Wall,
+                    ' ' => tiles[x][y] = Tile::Empty,
+                    '@' => { snake_x = x; snake_y = y; },
+                    _ => unreachable!(),
+                }
+            }
+        }
+        Map {
+            name: name,
+            tiles: tiles,
+            snake_x: snake_x,
+            snake_y: snake_y,
+        }
+    }
+}
 
 struct SnakeEnd {
     x: i32,
@@ -166,7 +212,7 @@ impl Snake {
 
 fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i32) {
     let target_rect = Rect::new(x * 10, 10 + y * 10, 10, 10);
-    match map[x as usize][y as usize] {
+    match map.tiles[x as usize][y as usize] {
         Tile::Empty => {
             renderer.set_draw_color(Color::RGB(255, 255, 255));
             renderer.fill_rect(target_rect).unwrap();
@@ -174,6 +220,7 @@ fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i
         tile => {
             renderer.copy(&tiles,
                           Some(Rect::new(match tile {
+                                             Tile::Wall => 150,
                                              Tile::Food => 140,
                                              Tile::SnakeVertical => 120,
                                              Tile::SnakeHorizontal => 130,
@@ -207,10 +254,10 @@ fn place_food(map: &mut Map, renderer: &mut Renderer, tiles: &Texture) {
     let mut rng = thread_rng();
     loop {
         let (x, y) = (rng.gen_range(0, 32), rng.gen_range(0, 23));
-        if map[x as usize][y as usize] != Tile::Empty {
+        if map.tiles[x as usize][y as usize] != Tile::Empty {
             continue;
         }
-        map[x as usize][y as usize] = Tile::Food;
+        map.tiles[x as usize][y as usize] = Tile::Food;
         update_tile(renderer, &tiles, &map, x, y);
         break;
     }
@@ -227,16 +274,20 @@ fn main() {
 
     let mut renderer = window.renderer().present_vsync().build().unwrap();
 
-    let tiles = renderer.create_texture_from_surface(Surface::load_bmp("data/tiles.bmp").unwrap())
+    let tiles = renderer.create_texture_from_surface(Surface::load_bmp("data/images/tiles.bmp").unwrap())
         .unwrap();
 
-    let font = Font::load_bmp(&mut renderer, "data/NeoSans.bmp");
+    let font = Font::load_bmp(&mut renderer, "data/images/NeoSans.bmp");
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut snake = Snake::new(5, 5, Direction::Right);
+    let mut map = if let Some(path) = env::args().nth(1) {
+        Map::load(path)
+    } else {
+        Map::new()
+    };
 
-    let mut map: Map = [[Tile::Empty; 23]; 32];
+    let mut snake = Snake::new(map.snake_x as i32, map.snake_y as i32, Direction::Right);
 
     let mut score = 0;
 
@@ -246,6 +297,13 @@ fn main() {
     renderer.set_draw_color(Color::RGB(0, 0, 0));
     renderer.fill_rect(Rect::new(0, 0, 320, 10)).unwrap();
     font.draw(&mut renderer, 1, 0, &format!("Score: {}", score));
+    font.draw(&mut renderer, 100, 0, &map.name);
+
+    for x in 0..32 {
+        for y in 0..23 {
+            update_tile(&mut renderer, &tiles, &map, x, y);
+        }
+    }
 
     place_food(&mut map, &mut renderer, &tiles);
 
@@ -272,19 +330,19 @@ fn main() {
         if snake.grow > 0 {
             snake.grow -= 1;
         } else {
-            map[snake.tail.x as usize][snake.tail.y as usize] = Tile::Empty;
+            map.tiles[snake.tail.x as usize][snake.tail.y as usize] = Tile::Empty;
 
             update_tile(&mut renderer, &tiles, &map, snake.tail.x, snake.tail.y);
 
             snake.tail.update();
 
-            match map[snake.tail.x as usize][snake.tail.y as usize] {
+            match map.tiles[snake.tail.x as usize][snake.tail.y as usize] {
                 Tile::SnakeTurn(direction, _) => snake.tail.direction = direction,
                 Tile::SnakeVertical | Tile::SnakeHorizontal => {}
                 _ => unreachable!(),
             };
 
-            map[snake.tail.x as usize][snake.tail.y as usize] = Tile::SnakeTail(snake.tail
+            map.tiles[snake.tail.x as usize][snake.tail.y as usize] = Tile::SnakeTail(snake.tail
                 .direction);
 
             update_tile(&mut renderer, &tiles, &map, snake.tail.x, snake.tail.y);
@@ -292,7 +350,7 @@ fn main() {
 
         if snake.head.direction != next_direction &&
            next_direction.opposite() != snake.head.direction {
-            map[snake.head.x as usize][snake.head.y as usize] =
+            map.tiles[snake.head.x as usize][snake.head.y as usize] =
                 Tile::SnakeTurn(next_direction,
                                 match (snake.head.direction, next_direction) {
                                     (Direction::Right, Direction::Down) |
@@ -303,7 +361,7 @@ fn main() {
                                 });
             snake.head.direction = next_direction;
         } else {
-            map[snake.head.x as usize][snake.head.y as usize] = match snake.head.direction {
+            map.tiles[snake.head.x as usize][snake.head.y as usize] = match snake.head.direction {
                 Direction::Up | Direction::Down => Tile::SnakeVertical,
                 Direction::Right | Direction::Left => Tile::SnakeHorizontal,
             };
@@ -313,13 +371,14 @@ fn main() {
 
         snake.head.update();
 
-        match map[snake.head.x as usize][snake.head.y as usize] {
+        match map.tiles[snake.head.x as usize][snake.head.y as usize] {
             Tile::Food => {
                 place_food(&mut map, &mut renderer, &tiles);
                 snake.grow += 5;
                 score += 1;
                 font.draw(&mut renderer, 1, 0, &format!("Score: {}", score));
             }
+            Tile::Wall |
             Tile::SnakeVertical |
             Tile::SnakeHorizontal |
             Tile::SnakeTurn(_, _) |
@@ -327,7 +386,7 @@ fn main() {
             _ => {}
         }
 
-        map[snake.head.x as usize][snake.head.y as usize] = Tile::SnakeHead(snake.head.direction);
+        map.tiles[snake.head.x as usize][snake.head.y as usize] = Tile::SnakeHead(snake.head.direction);
 
         update_tile(&mut renderer, &tiles, &map, snake.head.x, snake.head.y);
 
