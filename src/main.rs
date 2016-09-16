@@ -93,7 +93,7 @@ impl Direction {
 #[derive(Copy, Clone, PartialEq)]
 enum Tile {
     Empty,
-    Wall,
+    Wall(u8),
     Food,
     SnakeVertical,
     SnakeHorizontal,
@@ -129,10 +129,33 @@ impl Map {
         for (y, line) in lines.enumerate() {
             for (x, c) in line.unwrap().chars().enumerate() {
                  match c {
-                    'X' => tiles[x][y] = Tile::Wall,
+                    'X' => tiles[x][y] = Tile::Wall(0),
                     ' ' => tiles[x][y] = Tile::Empty,
                     '@' => { snake_x = x; snake_y = y; },
                     _ => unreachable!(),
+                }
+            }
+        }
+        for x in 0..32 {
+            for y in 0..23 {
+                match tiles[x][y] {
+                    Tile::Wall(i) => {
+                        let mut new_i = i;
+                        if y == 0 || match tiles[x][y - 1] { Tile::Wall(_) => true, _ => false } {
+                            new_i += 1;
+                        }
+                        if x == 32 - 1 || match tiles[x + 1][y] { Tile::Wall(_) => true, _ => false } {
+                            new_i += 2;
+                        }
+                        if y == 23 - 1 || match tiles[x][y + 1] { Tile::Wall(_) => true, _ => false } {
+                            new_i += 4;
+                        }
+                        if x == 0 || match tiles[x - 1][y] { Tile::Wall(_) => true, _ => false } {
+                            new_i += 8;
+                        }
+                        tiles[x][y] = Tile::Wall(new_i);
+                    }
+                    _ => {}
                 }
             }
         }
@@ -220,7 +243,7 @@ fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i
         tile => {
             renderer.copy(&tiles,
                           Some(Rect::new(match tile {
-                                             Tile::Wall => 150,
+                                             Tile::Wall(i) => 150 + 10 * i as i32,
                                              Tile::Food => 140,
                                              Tile::SnakeVertical => 120,
                                              Tile::SnakeHorizontal => 130,
@@ -378,7 +401,7 @@ fn main() {
                 score += 1;
                 font.draw(&mut renderer, 1, 0, &format!("Score: {}", score));
             }
-            Tile::Wall |
+            Tile::Wall(_) |
             Tile::SnakeVertical |
             Tile::SnakeHorizontal |
             Tile::SnakeTurn(_, _) |
