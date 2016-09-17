@@ -102,6 +102,7 @@ enum Tile {
     SnakeTail(Direction),
 }
 
+#[derive(Clone)]
 struct Map {
     name: String,
     tiles: [[Tile; 23]; 32],
@@ -286,6 +287,44 @@ fn place_food(map: &mut Map, renderer: &mut Renderer, tiles: &Texture) {
     }
 }
 
+struct Game {
+    snake: Snake,
+    score: u32,
+    snake_alive: bool,
+    snake_show: bool,
+    map: Map,
+}
+
+impl Game {
+    fn new(renderer: &mut Renderer, font: &Font, tiles: &Texture, map: &Map) -> Game {
+        let mut game = Game {
+            snake: Snake::new(map.snake_x as i32, map.snake_y as i32, Direction::Right),
+            snake_alive: true,
+            snake_show: true,
+            score: 0,
+            map: map.clone(),
+        };
+
+        renderer.set_draw_color(Color::RGB(255, 255, 255));
+        renderer.clear();
+
+        renderer.set_draw_color(Color::RGB(0, 0, 0));
+        renderer.fill_rect(Rect::new(0, 0, 320, 10)).unwrap();
+        font.draw(renderer, 1, 0, &format!("Score: {}", game.score));
+        font.draw(renderer, 100, 0, &game.map.name);
+
+        for x in 0..32 {
+            for y in 0..23 {
+                update_tile(renderer, &tiles, &game.map, x, y);
+            }
+        }
+
+        place_food(&mut game.map, renderer, &tiles);
+
+        game
+    }
+}
+
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -304,114 +343,130 @@ fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut map = if let Some(path) = env::args().nth(1) {
+    let map = if let Some(path) = env::args().nth(1) {
         Map::load(path)
     } else {
         Map::new()
     };
 
-    let mut snake = Snake::new(map.snake_x as i32, map.snake_y as i32, Direction::Right);
-
-    let mut score = 0;
-
-    renderer.set_draw_color(Color::RGB(255, 255, 255));
-    renderer.clear();
-
-    renderer.set_draw_color(Color::RGB(0, 0, 0));
-    renderer.fill_rect(Rect::new(0, 0, 320, 10)).unwrap();
-    font.draw(&mut renderer, 1, 0, &format!("Score: {}", score));
-    font.draw(&mut renderer, 100, 0, &map.name);
-
-    for x in 0..32 {
-        for y in 0..23 {
-            update_tile(&mut renderer, &tiles, &map, x, y);
-        }
-    }
-
-    place_food(&mut map, &mut renderer, &tiles);
+    let mut game = Game::new(&mut renderer, &font, &tiles, &map);
 
     'running: loop {
-        let mut next_direction = snake.head.direction;
+        let mut next_direction = game.snake.head.direction;
 
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. } |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => break 'running,
                 Event::KeyDown { scancode: Some(scancode), .. } => {
-                    next_direction = match scancode {
-                        Scancode::W => Direction::Up,
-                        Scancode::D => Direction::Right,
-                        Scancode::S => Direction::Down,
-                        Scancode::A => Direction::Left,
-                        _ => next_direction,
+                    if game.snake_alive {
+                        next_direction = match scancode {
+                            Scancode::W => Direction::Up,
+                            Scancode::D => Direction::Right,
+                            Scancode::S => Direction::Down,
+                            Scancode::A => Direction::Left,
+                            _ => next_direction,
+                        }
+                    } else {
+                        if scancode == Scancode::R {
+                            game = Game::new(&mut renderer, &font, &tiles, &map);
+                            continue 'running;
+                        }
                     }
                 }
                 _ => {}
             }
         }
 
-        if snake.grow > 0 {
-            snake.grow -= 1;
-        } else {
-            map.tiles[snake.tail.x as usize][snake.tail.y as usize] = Tile::Empty;
+        if game.snake_alive {
+            if game.snake.grow > 0 {
+                game.snake.grow -= 1;
+            } else {
+                game.map.tiles[game.snake.tail.x as usize][game.snake.tail.y as usize] = Tile::Empty;
 
-            update_tile(&mut renderer, &tiles, &map, snake.tail.x, snake.tail.y);
+                update_tile(&mut renderer, &tiles, &game.map, game.snake.tail.x, game.snake.tail.y);
 
-            snake.tail.update();
+                game.snake.tail.update();
 
-            match map.tiles[snake.tail.x as usize][snake.tail.y as usize] {
-                Tile::SnakeTurn(direction, _) => snake.tail.direction = direction,
-                Tile::SnakeVertical | Tile::SnakeHorizontal => {}
-                _ => unreachable!(),
-            };
+                match game.map.tiles[game.snake.tail.x as usize][game.snake.tail.y as usize] {
+                    Tile::SnakeTurn(direction, _) => game.snake.tail.direction = direction,
+                    Tile::SnakeVertical | Tile::SnakeHorizontal => {}
+                    _ => unreachable!(),
+                };
 
-            map.tiles[snake.tail.x as usize][snake.tail.y as usize] = Tile::SnakeTail(snake.tail
-                .direction);
+                game.map.tiles[game.snake.tail.x as usize][game.snake.tail.y as usize] = Tile::SnakeTail(game.snake.tail
+                    .direction);
 
-            update_tile(&mut renderer, &tiles, &map, snake.tail.x, snake.tail.y);
-        }
-
-        if snake.head.direction != next_direction &&
-           next_direction.opposite() != snake.head.direction {
-            map.tiles[snake.head.x as usize][snake.head.y as usize] =
-                Tile::SnakeTurn(next_direction,
-                                match (snake.head.direction, next_direction) {
-                                    (Direction::Right, Direction::Down) |
-                                    (Direction::Down, Direction::Left) |
-                                    (Direction::Left, Direction::Up) |
-                                    (Direction::Up, Direction::Right) => true,
-                                    _ => false,
-                                });
-            snake.head.direction = next_direction;
-        } else {
-            map.tiles[snake.head.x as usize][snake.head.y as usize] = match snake.head.direction {
-                Direction::Up | Direction::Down => Tile::SnakeVertical,
-                Direction::Right | Direction::Left => Tile::SnakeHorizontal,
-            };
-        }
-
-        update_tile(&mut renderer, &tiles, &map, snake.head.x, snake.head.y);
-
-        snake.head.update();
-
-        match map.tiles[snake.head.x as usize][snake.head.y as usize] {
-            Tile::Food => {
-                place_food(&mut map, &mut renderer, &tiles);
-                snake.grow += 5;
-                score += 1;
-                font.draw(&mut renderer, 1, 0, &format!("Score: {}", score));
+                update_tile(&mut renderer, &tiles, &game.map, game.snake.tail.x, game.snake.tail.y);
             }
-            Tile::Wall(_) |
-            Tile::SnakeVertical |
-            Tile::SnakeHorizontal |
-            Tile::SnakeTurn(_, _) |
-            Tile::SnakeTail(_) => panic!("You die!"),
-            _ => {}
+
+            if game.snake.head.direction != next_direction &&
+               next_direction.opposite() != game.snake.head.direction {
+                game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] =
+                    Tile::SnakeTurn(next_direction,
+                                    match (game.snake.head.direction, next_direction) {
+                                        (Direction::Right, Direction::Down) |
+                                        (Direction::Down, Direction::Left) |
+                                        (Direction::Left, Direction::Up) |
+                                        (Direction::Up, Direction::Right) => true,
+                                        _ => false,
+                                    });
+                game.snake.head.direction = next_direction;
+            } else {
+                game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] = match game.snake.head.direction {
+                    Direction::Up | Direction::Down => Tile::SnakeVertical,
+                    Direction::Right | Direction::Left => Tile::SnakeHorizontal,
+                };
+            }
+
+            update_tile(&mut renderer, &tiles, &game.map, game.snake.head.x, game.snake.head.y);
+
+            game.snake.head.update();
+
+            match game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] {
+                Tile::Food => {
+                    place_food(&mut game.map, &mut renderer, &tiles);
+                    game.snake.grow += 5;
+                    game.score += 1;
+                    font.draw(&mut renderer, 1, 0, &format!("Score: {}", game.score));
+                }
+                Tile::Wall(_) |
+                Tile::SnakeVertical |
+                Tile::SnakeHorizontal |
+                Tile::SnakeTurn(_, _) |
+                Tile::SnakeTail(_) => {
+                    game.snake_alive = false;
+                }
+                _ => {}
+            }
+
+            if game.snake_alive {
+                game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] = Tile::SnakeHead(game.snake.head.direction);
+                update_tile(&mut renderer, &tiles, &game.map, game.snake.head.x, game.snake.head.y);
+            }
+        } else {
+            for x in 0..32 {
+                for y in 0..23 {
+                    if !game.snake_show && match game.map.tiles[x as usize][y as usize] {
+                        Tile::SnakeVertical | Tile::SnakeHorizontal | Tile::SnakeTurn(_, _) | Tile::SnakeTail(_) => true,
+                        _ => false,
+                    } {
+                        let target_rect = Rect::new(x * 10, 10 + y * 10, 10, 10);
+                        renderer.set_draw_color(Color::RGB(255, 255, 255));
+                        renderer.fill_rect(target_rect).unwrap();
+                    } else {
+                        update_tile(&mut renderer, &tiles, &game.map, x, y);
+                    }
+                }
+            }
+            if game.snake_show {
+                font.draw(&mut renderer, 200, 0, "Press R to restart");
+            } else {
+                renderer.set_draw_color(Color::RGB(0, 0, 0));
+                renderer.fill_rect(Rect::new(200, 0, 120, 10)).unwrap();
+            }
+            game.snake_show = !game.snake_show;
         }
-
-        map.tiles[snake.head.x as usize][snake.head.y as usize] = Tile::SnakeHead(snake.head.direction);
-
-        update_tile(&mut renderer, &tiles, &map, snake.head.x, snake.head.y);
 
         renderer.present();
 
