@@ -129,10 +129,13 @@ impl Map {
         let mut snake_y = 0;
         for (y, line) in lines.enumerate() {
             for (x, c) in line.unwrap().chars().enumerate() {
-                 match c {
+                match c {
                     'X' => tiles[x][y] = Tile::Wall(0),
                     ' ' => tiles[x][y] = Tile::Empty,
-                    '@' => { snake_x = x; snake_y = y; },
+                    '@' => {
+                        snake_x = x;
+                        snake_y = y;
+                    }
                     _ => unreachable!(),
                 }
             }
@@ -142,16 +145,32 @@ impl Map {
                 match tiles[x][y] {
                     Tile::Wall(i) => {
                         let mut new_i = i;
-                        if y == 0 || match tiles[x][y - 1] { Tile::Wall(_) => true, _ => false } {
+                        if y == 0 ||
+                           match tiles[x][y - 1] {
+                            Tile::Wall(_) => true,
+                            _ => false,
+                        } {
                             new_i += 1;
                         }
-                        if x == 32 - 1 || match tiles[x + 1][y] { Tile::Wall(_) => true, _ => false } {
+                        if x == 32 - 1 ||
+                           match tiles[x + 1][y] {
+                            Tile::Wall(_) => true,
+                            _ => false,
+                        } {
                             new_i += 2;
                         }
-                        if y == 23 - 1 || match tiles[x][y + 1] { Tile::Wall(_) => true, _ => false } {
+                        if y == 23 - 1 ||
+                           match tiles[x][y + 1] {
+                            Tile::Wall(_) => true,
+                            _ => false,
+                        } {
                             new_i += 4;
                         }
-                        if x == 0 || match tiles[x - 1][y] { Tile::Wall(_) => true, _ => false } {
+                        if x == 0 ||
+                           match tiles[x - 1][y] {
+                            Tile::Wall(_) => true,
+                            _ => false,
+                        } {
                             new_i += 8;
                         }
                         tiles[x][y] = Tile::Wall(new_i);
@@ -336,8 +355,9 @@ fn main() {
 
     let mut renderer = window.renderer().present_vsync().build().unwrap();
 
-    let tiles = renderer.create_texture_from_surface(Surface::load_bmp("data/images/tiles.bmp").unwrap())
-        .unwrap();
+    let tiles =
+        renderer.create_texture_from_surface(Surface::load_bmp("data/images/tiles.bmp").unwrap())
+            .unwrap();
 
     let font = Font::load_bmp(&mut renderer, "data/images/NeoSans.bmp");
 
@@ -382,9 +402,14 @@ fn main() {
             if game.snake.grow > 0 {
                 game.snake.grow -= 1;
             } else {
-                game.map.tiles[game.snake.tail.x as usize][game.snake.tail.y as usize] = Tile::Empty;
+                game.map.tiles[game.snake.tail.x as usize][game.snake.tail.y as usize] =
+                    Tile::Empty;
 
-                update_tile(&mut renderer, &tiles, &game.map, game.snake.tail.x, game.snake.tail.y);
+                update_tile(&mut renderer,
+                            &tiles,
+                            &game.map,
+                            game.snake.tail.x,
+                            game.snake.tail.y);
 
                 game.snake.tail.update();
 
@@ -394,10 +419,16 @@ fn main() {
                     _ => unreachable!(),
                 };
 
-                game.map.tiles[game.snake.tail.x as usize][game.snake.tail.y as usize] = Tile::SnakeTail(game.snake.tail
-                    .direction);
+                game.map.tiles[game.snake.tail.x as usize][game.snake.tail.y as usize] =
+                    Tile::SnakeTail(game.snake
+                        .tail
+                        .direction);
 
-                update_tile(&mut renderer, &tiles, &game.map, game.snake.tail.x, game.snake.tail.y);
+                update_tile(&mut renderer,
+                            &tiles,
+                            &game.map,
+                            game.snake.tail.x,
+                            game.snake.tail.y);
             }
 
             if game.snake.head.direction != next_direction &&
@@ -413,13 +444,18 @@ fn main() {
                                     });
                 game.snake.head.direction = next_direction;
             } else {
-                game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] = match game.snake.head.direction {
-                    Direction::Up | Direction::Down => Tile::SnakeVertical,
-                    Direction::Right | Direction::Left => Tile::SnakeHorizontal,
-                };
+                game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] =
+                    match game.snake.head.direction {
+                        Direction::Up | Direction::Down => Tile::SnakeVertical,
+                        Direction::Right | Direction::Left => Tile::SnakeHorizontal,
+                    };
             }
 
-            update_tile(&mut renderer, &tiles, &game.map, game.snake.head.x, game.snake.head.y);
+            update_tile(&mut renderer,
+                        &tiles,
+                        &game.map,
+                        game.snake.head.x,
+                        game.snake.head.y);
 
             game.snake.head.update();
 
@@ -441,14 +477,23 @@ fn main() {
             }
 
             if game.snake_alive {
-                game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] = Tile::SnakeHead(game.snake.head.direction);
-                update_tile(&mut renderer, &tiles, &game.map, game.snake.head.x, game.snake.head.y);
+                game.map.tiles[game.snake.head.x as usize][game.snake.head.y as usize] =
+                    Tile::SnakeHead(game.snake.head.direction);
+                update_tile(&mut renderer,
+                            &tiles,
+                            &game.map,
+                            game.snake.head.x,
+                            game.snake.head.y);
             }
         } else {
             for x in 0..32 {
                 for y in 0..23 {
-                    if !game.snake_show && match game.map.tiles[x as usize][y as usize] {
-                        Tile::SnakeVertical | Tile::SnakeHorizontal | Tile::SnakeTurn(_, _) | Tile::SnakeTail(_) => true,
+                    if !game.snake_show &&
+                       match game.map.tiles[x as usize][y as usize] {
+                        Tile::SnakeVertical |
+                        Tile::SnakeHorizontal |
+                        Tile::SnakeTurn(_, _) |
+                        Tile::SnakeTail(_) => true,
                         _ => false,
                     } {
                         let target_rect = Rect::new(x * 10, 10 + y * 10, 10, 10);
