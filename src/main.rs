@@ -120,6 +120,16 @@ impl Map {
         }
     }
 
+    fn is_wall(&self, x: i32, y: i32) -> bool {
+        if x < 0 || x >= 32 || y < 0 || y >= 23 {
+            return true;
+        }
+        match self.tiles[x as usize][y as usize] {
+            Tile::Wall(_) => true,
+            _ => false,
+        }
+    }
+
     fn load<P: AsRef<Path>>(path: P) -> Map {
         let f = BufReader::new(File::open(path).unwrap());
         let mut lines = f.lines();
@@ -140,51 +150,36 @@ impl Map {
                 }
             }
         }
+        let mut map = Map {
+            name: name,
+            tiles: tiles,
+            snake_x: snake_x,
+            snake_y: snake_y,
+        };
         for x in 0..32 {
             for y in 0..23 {
-                match tiles[x][y] {
+                match map.tiles[x as usize][y as usize] {
                     Tile::Wall(i) => {
                         let mut new_i = i;
-                        if y == 0 ||
-                           match tiles[x][y - 1] {
-                            Tile::Wall(_) => true,
-                            _ => false,
-                        } {
+                        if map.is_wall(x, y - 1) {
                             new_i += 1;
                         }
-                        if x == 32 - 1 ||
-                           match tiles[x + 1][y] {
-                            Tile::Wall(_) => true,
-                            _ => false,
-                        } {
+                        if map.is_wall(x + 1, y) {
                             new_i += 2;
                         }
-                        if y == 23 - 1 ||
-                           match tiles[x][y + 1] {
-                            Tile::Wall(_) => true,
-                            _ => false,
-                        } {
+                        if map.is_wall(x, y + 1) {
                             new_i += 4;
                         }
-                        if x == 0 ||
-                           match tiles[x - 1][y] {
-                            Tile::Wall(_) => true,
-                            _ => false,
-                        } {
+                        if map.is_wall(x - 1, y) {
                             new_i += 8;
                         }
-                        tiles[x][y] = Tile::Wall(new_i);
+                        map.tiles[x as usize][y as usize] = Tile::Wall(new_i);
                     }
                     _ => {}
                 }
             }
         }
-        Map {
-            name: name,
-            tiles: tiles,
-            snake_x: snake_x,
-            snake_y: snake_y,
-        }
+        map
     }
 }
 
