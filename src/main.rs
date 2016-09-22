@@ -137,8 +137,8 @@ impl Map {
         let mut tiles = [[Tile::Empty; 23]; 32];
         let mut snake_x = 0;
         let mut snake_y = 0;
-        for (y, line) in lines.enumerate() {
-            for (x, c) in line.unwrap().chars().enumerate() {
+        for (y, line) in lines.take(23).enumerate() {
+            for (x, c) in line.unwrap().chars().take(32).enumerate() {
                 match c {
                     'X' => tiles[x][y] = Tile::Wall(0),
                     ' ' => tiles[x][y] = Tile::Empty,
