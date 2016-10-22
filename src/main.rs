@@ -4,7 +4,7 @@ extern crate rand;
 use std::thread;
 use std::time::Duration;
 use std::path::Path;
-use std::io::BufReader;
+use std::io::{self, BufReader};
 use std::io::prelude::*;
 use std::fs::File;
 use std::env;
@@ -110,6 +110,12 @@ struct Map {
     snake_y: usize,
 }
 
+#[derive(Debug)]
+enum MapError {
+    Io(io::Error),
+    InvalidFormat(String),
+}
+
 impl Map {
     fn new() -> Map {
         Map {
@@ -130,26 +136,36 @@ impl Map {
         }
     }
 
-    fn load<P: AsRef<Path>>(path: P) -> Map {
-        let f = BufReader::new(File::open(path).unwrap());
-        let mut lines = f.lines();
-        let name = lines.next().unwrap().unwrap();
+    fn load<P: AsRef<Path>>(path: P) -> Result<Map, MapError> {
+        let file = try!(File::open(path).map_err(MapError::Io));
+        let reader = BufReader::new(file);
+        let mut lines = reader.lines();
+        let name = match lines.next() {
+                Some(line) => try!(line.map_err(MapError::Io)),
+                None => return Err(MapError::InvalidFormat("name required".to_string())),
+            }
+            .trim()
+            .to_string();
+
+        if name.is_empty() {
+            return Err(MapError::InvalidFormat("empty name".to_string()));
+        }
+
         let mut tiles = [[Tile::Empty; 23]; 32];
-        let mut snake_x = 0;
-        let mut snake_y = 0;
+        let mut snake_pos = None;
         for (y, line) in lines.take(23).enumerate() {
-            for (x, c) in line.unwrap().chars().take(32).enumerate() {
+            for (x, c) in try!(line.map_err(MapError::Io)).chars().take(32).enumerate() {
                 match c {
                     'X' => tiles[x][y] = Tile::Wall(0),
                     ' ' => tiles[x][y] = Tile::Empty,
-                    '@' => {
-                        snake_x = x;
-                        snake_y = y;
-                    }
-                    _ => unreachable!(),
+                    '@' => snake_pos = Some((x, y)),
+                    _ => {}
                 }
             }
         }
+
+        let (snake_x, snake_y) =
+            try!(snake_pos.ok_or(MapError::InvalidFormat("no snake".to_string())));
         let mut map = Map {
             name: name,
             tiles: tiles,
@@ -179,7 +195,7 @@ impl Map {
                 }
             }
         }
-        map
+        Ok(map)
     }
 }
 
@@ -359,7 +375,7 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let map = if let Some(path) = env::args().nth(1) {
-        Map::load(path)
+        Map::load(path).unwrap()
     } else {
         Map::new()
     };
