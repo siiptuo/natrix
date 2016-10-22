@@ -268,7 +268,7 @@ fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i
     let target_rect = Rect::new(x * 10, 10 + y * 10, 10, 10);
     match map.tiles[x as usize][y as usize] {
         Tile::Empty => {
-            renderer.set_draw_color(Color::RGB(255, 255, 255));
+            renderer.set_draw_color(Color::RGB(215, 227, 244));
             renderer.fill_rect(target_rect).unwrap();
         }
         tile => {
@@ -508,7 +508,7 @@ fn main() {
                         _ => false,
                     } {
                         let target_rect = Rect::new(x * 10, 10 + y * 10, 10, 10);
-                        renderer.set_draw_color(Color::RGB(255, 255, 255));
+                        renderer.set_draw_color(Color::RGB(215, 227, 244));
                         renderer.fill_rect(target_rect).unwrap();
                     } else {
                         update_tile(&mut renderer, &tiles, &game.map, x, y);
