@@ -34,7 +34,10 @@ impl Game {
         renderer.set_draw_color(Color::RGB(0, 0, 0));
         renderer.fill_rect(Rect::new(0, 0, 320, 10)).unwrap();
         font.draw(renderer, 1, 0, &format!("Score: {}", game.score));
-        font.draw(renderer, 100, 0, &game.map.name);
+        font.draw(renderer,
+                  ((320 - font.measure(&game.map.name)) / 2) as i32,
+                  0,
+                  &game.map.name);
 
         for x in 0..32 {
             for y in 0..23 {

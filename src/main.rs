@@ -185,7 +185,10 @@ fn main() {
                 }
             }
             if game.snake_show {
-                font.draw(&mut renderer, 200, 0, "Press R to restart");
+                font.draw(&mut renderer,
+                          320 - 1 - font.measure("Press R to restart") as i32,
+                          0,
+                          "Press R to restart");
             } else {
                 renderer.set_draw_color(Color::RGB(0, 0, 0));
                 renderer.fill_rect(Rect::new(200, 0, 120, 10)).unwrap();

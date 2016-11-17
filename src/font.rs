@@ -4,6 +4,8 @@ use sdl2::pixels::Color;
 use sdl2::surface::Surface;
 use std::path::Path;
 
+const SPACE_WIDTH: u32 = 2;
+
 pub struct Font {
     texture: Texture,
     characters: [Character; 256],
@@ -41,18 +43,33 @@ impl Font {
         }
     }
 
+    fn get_character(&self, byte: u8) -> Character {
+        self.characters[byte as usize - '!' as usize]
+    }
+
     pub fn draw(&self, renderer: &mut Renderer, x: i32, y: i32, text: &str) {
         let mut position = x;
         for byte in text.bytes() {
             position += if byte == ' ' as u8 {
-                2
+                SPACE_WIDTH as i32
             } else {
-                let character = self.characters[byte as usize - '!' as usize];
+                let character = self.get_character(byte);
                 renderer.copy(&self.texture,
                               Some(Rect::new(character.x as i32, 0, character.width, 10)),
                               Some(Rect::new(position, y, character.width, 9)));
                 character.width as i32
             }
         }
+    }
+
+    pub fn measure(&self, text: &str) -> u32 {
+        text.bytes().fold(0, |acc, byte| {
+            acc +
+            if byte == ' ' as u8 {
+                SPACE_WIDTH
+            } else {
+                self.get_character(byte).width
+            }
+        })
     }
 }
