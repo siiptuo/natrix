@@ -102,6 +102,15 @@ enum Tile {
     SnakeTail(Direction),
 }
 
+impl Tile {
+    fn is_wall(&self) -> bool {
+        match *self {
+            Tile::Wall(_) => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Clone)]
 struct Map {
     name: String,
@@ -123,16 +132,6 @@ impl Map {
             tiles: [[Tile::Empty; 23]; 32],
             snake_x: 5,
             snake_y: 5,
-        }
-    }
-
-    fn is_wall(&self, x: i32, y: i32) -> bool {
-        if x < 0 || x >= 32 || y < 0 || y >= 23 {
-            return true;
-        }
-        match self.tiles[x as usize][y as usize] {
-            Tile::Wall(_) => true,
-            _ => false,
         }
     }
 
@@ -163,39 +162,36 @@ impl Map {
                 }
             }
         }
-
         let (snake_x, snake_y) =
             try!(snake_pos.ok_or(MapError::InvalidFormat("no snake".to_string())));
-        let mut map = Map {
+
+        for x in 0..32 {
+            for y in 0..23 {
+                if let Tile::Wall(i) = tiles[x][y] {
+                    let mut new_i = i;
+                    if y == 0 || tiles[x][y - 1].is_wall() {
+                        new_i += 1;
+                    }
+                    if x == 31 || tiles[x + 1][y].is_wall() {
+                        new_i += 2;
+                    }
+                    if y == 22 || tiles[x][y + 1].is_wall() {
+                        new_i += 4;
+                    }
+                    if x == 0 || tiles[x - 1][y].is_wall() {
+                        new_i += 8;
+                    }
+                    tiles[x][y] = Tile::Wall(new_i);
+                }
+            }
+        }
+
+        Ok(Map {
             name: name,
             tiles: tiles,
             snake_x: snake_x,
             snake_y: snake_y,
-        };
-        for x in 0..32 {
-            for y in 0..23 {
-                match map.tiles[x as usize][y as usize] {
-                    Tile::Wall(i) => {
-                        let mut new_i = i;
-                        if map.is_wall(x, y - 1) {
-                            new_i += 1;
-                        }
-                        if map.is_wall(x + 1, y) {
-                            new_i += 2;
-                        }
-                        if map.is_wall(x, y + 1) {
-                            new_i += 4;
-                        }
-                        if map.is_wall(x - 1, y) {
-                            new_i += 8;
-                        }
-                        map.tiles[x as usize][y as usize] = Tile::Wall(new_i);
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Ok(map)
+        })
     }
 }
 
