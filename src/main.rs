@@ -67,11 +67,9 @@ fn main() {
                             Scancode::A => Direction::Left,
                             _ => next_direction,
                         }
-                    } else {
-                        if scancode == Scancode::R {
-                            game = Game::new(&mut renderer, &font, &tiles, &map);
-                            continue 'running;
-                        }
+                    } else if scancode == Scancode::R {
+                        game = Game::new(&mut renderer, &font, &tiles, &map);
+                        continue 'running;
                     }
                 }
                 _ => {}

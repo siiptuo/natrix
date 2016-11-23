@@ -50,7 +50,7 @@ impl Font {
     pub fn draw(&self, renderer: &mut Renderer, x: i32, y: i32, text: &str) {
         let mut position = x;
         for byte in text.bytes() {
-            position += if byte == ' ' as u8 {
+            position += if byte == b' ' {
                 SPACE_WIDTH as i32
             } else {
                 let character = self.get_character(byte);
@@ -65,7 +65,7 @@ impl Font {
     pub fn measure(&self, text: &str) -> u32 {
         text.bytes().fold(0, |acc, byte| {
             acc +
-            if byte == ' ' as u8 {
+            if byte == b' ' {
                 SPACE_WIDTH
             } else {
                 self.get_character(byte).width

@@ -41,11 +41,11 @@ impl Game {
 
         for x in 0..32 {
             for y in 0..23 {
-                update_tile(renderer, &tiles, &game.map, x, y);
+                update_tile(renderer, tiles, &game.map, x, y);
             }
         }
 
-        place_food(&mut game.map, renderer, &tiles);
+        place_food(&mut game.map, renderer, tiles);
 
         game
     }
@@ -59,7 +59,7 @@ pub fn place_food(map: &mut Map, renderer: &mut Renderer, tiles: &Texture) {
             continue;
         }
         map.tiles[x as usize][y as usize] = Tile::Food;
-        update_tile(renderer, &tiles, &map, x, y);
+        update_tile(renderer, tiles, map, x, y);
         break;
     }
 }
@@ -72,7 +72,7 @@ pub fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, 
             renderer.fill_rect(target_rect).unwrap();
         }
         tile => {
-            renderer.copy(&tiles,
+            renderer.copy(tiles,
                           Some(Rect::new(match tile {
                                              Tile::Wall(i) => 150 + 10 * i as i32,
                                              Tile::Food => 140,
