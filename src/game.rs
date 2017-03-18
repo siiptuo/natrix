@@ -283,7 +283,7 @@ fn update_tile(renderer: &mut Renderer, tiles: &Texture, map: &Map, x: i32, y: i
                                          0,
                                          10,
                                          10)),
-                          Some(target_rect));
+                          Some(target_rect)).unwrap();
         }
     }
 }

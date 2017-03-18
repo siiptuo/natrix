@@ -56,7 +56,7 @@ impl Font {
                 let character = self.get_character(byte);
                 renderer.copy(&self.texture,
                               Some(Rect::new(character.x as i32, 0, character.width, 10)),
-                              Some(Rect::new(position, y, character.width, 9)));
+                              Some(Rect::new(position, y, character.width, 9))).unwrap();
                 character.width as i32
             }
         }
