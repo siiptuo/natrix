@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["Tuomas Siipola <siiptuo@kapsi.fi>"]
 
 [dependencies]
-sdl2 = "0.29"
+sdl2 = "0.30"
 rand = "0.3"

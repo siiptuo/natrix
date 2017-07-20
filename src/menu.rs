@@ -5,7 +5,8 @@ use std::time::Duration;
 use sdl2::event::{Event, EventPollIterator};
 use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
-use sdl2::render::{Renderer, Texture};
+use sdl2::render::{Canvas, Texture};
+use sdl2::video::Window;
 
 use font::Font;
 use game::Game;
@@ -20,11 +21,10 @@ pub struct Menu {
 fn read_maps() -> Vec<Map> {
     match fs::read_dir("data/maps") {
         Ok(entries) => {
-            entries.filter_map(|entry| {
-                    match entry {
-                        Ok(entry) => Map::load(entry.path()).ok(),
-                        Err(_) => None,
-                    }
+            entries
+                .filter_map(|entry| match entry {
+                    Ok(entry) => Map::load(entry.path()).ok(),
+                    Err(_) => None,
                 })
                 .collect()
         }
@@ -47,23 +47,28 @@ impl Menu {
 }
 
 impl State for Menu {
-    fn update(&mut self,
-              events: EventPollIterator,
-              renderer: &mut Renderer,
-              font: &Font,
-              tiles: &Texture)
-              -> Action {
+    fn update(
+        &mut self,
+        events: EventPollIterator,
+        canvas: &mut Canvas<Window>,
+        font: &Font,
+        tiles: &Texture,
+    ) -> Action {
         for event in events {
             match event {
                 Event::Quit { .. } => return Action::Quit,
-                Event::KeyDown { scancode: Some(scancode), .. } => {
+                Event::KeyDown {
+                    scancode: Some(scancode),
+                    ..
+                } => {
                     match scancode {
                         Scancode::Space => {
-                            return Action::Change(
-                                Box::new(
-                                    Game::new(renderer, font, tiles, &self.maps[self.selected_map])
-                                )
-                            );
+                            return Action::Change(Box::new(Game::new(
+                                canvas,
+                                font,
+                                tiles,
+                                &self.maps[self.selected_map],
+                            )));
                         }
                         Scancode::W => {
                             if self.selected_map == 0 {
@@ -86,18 +91,20 @@ impl State for Menu {
             }
         }
 
-        renderer.set_draw_color(Color::RGB(255, 255, 255));
-        renderer.clear();
-        font.draw(renderer, 10, 10, "Natrix");
+        canvas.set_draw_color(Color::RGB(255, 255, 255));
+        canvas.clear();
+        font.draw(canvas, 10, 10, "Natrix");
 
         for (i, map) in self.maps.iter().enumerate() {
-            font.draw(renderer,
-                      if i == self.selected_map { 20 } else { 10 },
-                      30 + i as i32 * 10,
-                      &map.name);
+            font.draw(
+                canvas,
+                if i == self.selected_map { 20 } else { 10 },
+                30 + i as i32 * 10,
+                &map.name,
+            );
         }
 
-        renderer.present();
+        canvas.present();
 
         thread::sleep(Duration::from_millis(100));
 

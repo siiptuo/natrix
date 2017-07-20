@@ -1,13 +1,14 @@
 use sdl2::rect::Rect;
-use sdl2::render::{Renderer, Texture};
+use sdl2::render::{Canvas, TextureCreator, Texture};
+use sdl2::video::{Window, WindowContext};
 use sdl2::pixels::Color;
 use sdl2::surface::Surface;
 use std::path::Path;
 
 const SPACE_WIDTH: u32 = 2;
 
-pub struct Font {
-    texture: Texture,
+pub struct Font<'a> {
+    texture: Texture<'a>,
     characters: [Character; 256],
 }
 
@@ -17,8 +18,11 @@ struct Character {
     width: u32,
 }
 
-impl Font {
-    pub fn load_bmp<P: AsRef<Path>>(renderer: &mut Renderer, path: P) -> Font {
+impl<'a> Font<'a> {
+    pub fn load_bmp<P: AsRef<Path>>(
+        texture_creator: &TextureCreator<WindowContext>,
+        path: P,
+    ) -> Font {
         let mut characters = [Character { x: 0, width: 0 }; 256];
         let mut surface = Surface::load_bmp(path).unwrap();
         surface.with_lock(|pixels| {
@@ -27,7 +31,8 @@ impl Font {
 
             for (x, color) in pixels[3 as usize..(surface.width() * 3) as usize]
                 .chunks(3)
-                .enumerate() {
+                .enumerate()
+            {
                 if color == [255, 0, 255] {
                     characters[count].x = (last_x + 1) as u32;
                     characters[count].width = (x - last_x) as u32;
@@ -36,9 +41,13 @@ impl Font {
                 }
             }
         });
-        surface.set_color_key(true, Color::RGB(211, 203, 207)).unwrap();
+        surface
+            .set_color_key(true, Color::RGB(211, 203, 207))
+            .unwrap();
         Font {
-            texture: renderer.create_texture_from_surface(surface).unwrap(),
+            texture: texture_creator
+                .create_texture_from_surface(surface)
+                .unwrap(),
             characters: characters,
         }
     }
@@ -47,16 +56,20 @@ impl Font {
         self.characters[byte as usize - '!' as usize]
     }
 
-    pub fn draw(&self, renderer: &mut Renderer, x: i32, y: i32, text: &str) {
+    pub fn draw(&self, canvas: &mut Canvas<Window>, x: i32, y: i32, text: &str) {
         let mut position = x;
         for byte in text.bytes() {
             position += if byte == b' ' {
                 SPACE_WIDTH as i32
             } else {
                 let character = self.get_character(byte);
-                renderer.copy(&self.texture,
-                              Some(Rect::new(character.x as i32, 0, character.width, 10)),
-                              Some(Rect::new(position, y, character.width, 9))).unwrap();
+                canvas
+                    .copy(
+                        &self.texture,
+                        Some(Rect::new(character.x as i32, 0, character.width, 10)),
+                        Some(Rect::new(position, y, character.width, 9)),
+                    )
+                    .unwrap();
                 character.width as i32
             }
         }
@@ -65,11 +78,11 @@ impl Font {
     pub fn measure(&self, text: &str) -> u32 {
         text.bytes().fold(0, |acc, byte| {
             acc +
-            if byte == b' ' {
-                SPACE_WIDTH
-            } else {
-                self.get_character(byte).width
-            }
+                if byte == b' ' {
+                    SPACE_WIDTH
+                } else {
+                    self.get_character(byte).width
+                }
         })
     }
 }

@@ -1,5 +1,6 @@
 use sdl2::event::EventPollIterator;
-use sdl2::render::{Renderer, Texture};
+use sdl2::render::{Canvas, Texture};
+use sdl2::video::Window;
 
 use font::Font;
 
@@ -10,10 +11,11 @@ pub enum Action {
 }
 
 pub trait State {
-    fn update(&mut self,
-              events: EventPollIterator,
-              renderer: &mut Renderer,
-              font: &Font,
-              tiles: &Texture)
-              -> Action;
+    fn update(
+        &mut self,
+        events: EventPollIterator,
+        canvas: &mut Canvas<Window>,
+        font: &Font,
+        tiles: &Texture,
+    ) -> Action;
 }

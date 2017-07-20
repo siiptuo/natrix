@@ -34,10 +34,9 @@ impl Map {
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
         let name = match lines.next() {
-                Some(line) => try!(line.map_err(MapError::Io)),
-                None => return Err(MapError::InvalidFormat("name required".to_string())),
-            }
-            .trim()
+            Some(line) => try!(line.map_err(MapError::Io)),
+            None => return Err(MapError::InvalidFormat("name required".to_string())),
+        }.trim()
             .to_string();
 
         if name.is_empty() {
@@ -47,7 +46,11 @@ impl Map {
         let mut tiles = [[Tile::Empty; 23]; 32];
         let mut snake_pos = None;
         for (y, line) in lines.take(23).enumerate() {
-            for (x, c) in try!(line.map_err(MapError::Io)).chars().take(32).enumerate() {
+            for (x, c) in try!(line.map_err(MapError::Io))
+                .chars()
+                .take(32)
+                .enumerate()
+            {
                 match c {
                     'X' => tiles[x][y] = Tile::Wall(0),
                     ' ' => tiles[x][y] = Tile::Empty,
