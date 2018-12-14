@@ -1,7 +1,7 @@
-use std::io::{self, BufReader};
-use std::io::prelude::*;
-use std::path::Path;
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::{self, BufReader};
+use std::path::Path;
 
 use crate::tile::Tile;
 
@@ -30,14 +30,15 @@ impl Map {
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Map, MapError> {
-        let file = r#try!(File::open(path).map_err(MapError::Io));
+        let file = File::open(path).map_err(MapError::Io)?;
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
         let name = match lines.next() {
-            Some(line) => r#try!(line.map_err(MapError::Io)),
+            Some(line) => line.map_err(MapError::Io)?,
             None => return Err(MapError::InvalidFormat("name required".to_string())),
-        }.trim()
-            .to_string();
+        }
+        .trim()
+        .to_string();
 
         if name.is_empty() {
             return Err(MapError::InvalidFormat("empty name".to_string()));
@@ -46,11 +47,7 @@ impl Map {
         let mut tiles = [[Tile::Empty; 23]; 32];
         let mut snake_pos = None;
         for (y, line) in lines.take(23).enumerate() {
-            for (x, c) in r#try!(line.map_err(MapError::Io))
-                .chars()
-                .take(32)
-                .enumerate()
-            {
+            for (x, c) in line.map_err(MapError::Io)?.chars().take(32).enumerate() {
                 match c {
                     'X' => tiles[x][y] = Tile::Wall(0),
                     ' ' => tiles[x][y] = Tile::Empty,
@@ -60,7 +57,7 @@ impl Map {
             }
         }
         let (snake_x, snake_y) =
-            r#try!(snake_pos.ok_or(MapError::InvalidFormat("no snake".to_string())));
+            snake_pos.ok_or_else(|| MapError::InvalidFormat("no snake".to_string()))?;
 
         for x in 0..32 {
             for y in 0..23 {
@@ -84,10 +81,10 @@ impl Map {
         }
 
         Ok(Map {
-            name: name,
-            tiles: tiles,
-            snake_x: snake_x,
-            snake_y: snake_y,
+            name,
+            tiles,
+            snake_x,
+            snake_y,
         })
     }
 }

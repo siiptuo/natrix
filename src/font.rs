@@ -1,8 +1,8 @@
-use sdl2::rect::Rect;
-use sdl2::render::{Canvas, TextureCreator, Texture};
-use sdl2::video::{Window, WindowContext};
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
+use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::surface::Surface;
+use sdl2::video::{Window, WindowContext};
 use std::path::Path;
 
 const SPACE_WIDTH: u32 = 2;
@@ -48,7 +48,7 @@ impl<'a> Font<'a> {
             texture: texture_creator
                 .create_texture_from_surface(surface)
                 .unwrap(),
-            characters: characters,
+            characters,
         }
     }
 
@@ -77,12 +77,11 @@ impl<'a> Font<'a> {
 
     pub fn measure(&self, text: &str) -> u32 {
         text.bytes().fold(0, |acc, byte| {
-            acc +
-                if byte == b' ' {
-                    SPACE_WIDTH
-                } else {
-                    self.get_character(byte).width
-                }
+            acc + if byte == b' ' {
+                SPACE_WIDTH
+            } else {
+                self.get_character(byte).width
+            }
         })
     }
 }

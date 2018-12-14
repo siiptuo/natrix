@@ -11,7 +11,7 @@ use sdl2::video::Window;
 use crate::font::Font;
 use crate::game::Game;
 use crate::map::Map;
-use crate::state::{State, Action};
+use crate::state::{Action, State};
 
 pub struct Menu {
     maps: Vec<Map>,
@@ -20,14 +20,12 @@ pub struct Menu {
 
 fn read_maps() -> Vec<Map> {
     match fs::read_dir("data/maps") {
-        Ok(entries) => {
-            entries
-                .filter_map(|entry| match entry {
-                    Ok(entry) => Map::load(entry.path()).ok(),
-                    Err(_) => None,
-                })
-                .collect()
-        }
+        Ok(entries) => entries
+            .filter_map(|entry| match entry {
+                Ok(entry) => Map::load(entry.path()).ok(),
+                Err(_) => None,
+            })
+            .collect(),
         Err(_) => Vec::new(),
     }
 }
@@ -60,33 +58,31 @@ impl State for Menu {
                 Event::KeyDown {
                     scancode: Some(scancode),
                     ..
-                } => {
-                    match scancode {
-                        Scancode::Space => {
-                            return Action::Change(Box::new(Game::new(
-                                canvas,
-                                font,
-                                tiles,
-                                &self.maps[self.selected_map],
-                            )));
-                        }
-                        Scancode::W => {
-                            if self.selected_map == 0 {
-                                self.selected_map = self.maps.len() - 1;
-                            } else {
-                                self.selected_map -= 1;
-                            }
-                        }
-                        Scancode::S => {
-                            if self.selected_map == self.maps.len() - 1 {
-                                self.selected_map = 0;
-                            } else {
-                                self.selected_map += 1;
-                            }
-                        }
-                        _ => {}
+                } => match scancode {
+                    Scancode::Space => {
+                        return Action::Change(Box::new(Game::new(
+                            canvas,
+                            font,
+                            tiles,
+                            &self.maps[self.selected_map],
+                        )));
                     }
-                }
+                    Scancode::W => {
+                        if self.selected_map == 0 {
+                            self.selected_map = self.maps.len() - 1;
+                        } else {
+                            self.selected_map -= 1;
+                        }
+                    }
+                    Scancode::S => {
+                        if self.selected_map == self.maps.len() - 1 {
+                            self.selected_map = 0;
+                        } else {
+                            self.selected_map += 1;
+                        }
+                    }
+                    _ => {}
+                },
                 _ => {}
             }
         }

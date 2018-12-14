@@ -50,16 +50,8 @@ pub struct Snake {
 impl Snake {
     pub fn new(x: i32, y: i32, direction: Direction) -> Snake {
         Snake {
-            head: SnakeEnd {
-                x: x,
-                y: y,
-                direction: direction,
-            },
-            tail: SnakeEnd {
-                x: x,
-                y: y,
-                direction: direction,
-            },
+            head: SnakeEnd { x, y, direction },
+            tail: SnakeEnd { x, y, direction },
             grow: 10,
         }
     }

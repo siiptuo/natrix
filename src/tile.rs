@@ -13,8 +13,8 @@ pub enum Tile {
 }
 
 impl Tile {
-    pub fn is_wall(&self) -> bool {
-        match *self {
+    pub fn is_wall(self) -> bool {
+        match self {
             Tile::Wall(_) => true,
             _ => false,
         }

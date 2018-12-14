@@ -2,20 +2,20 @@ use rand::{thread_rng, Rng};
 use std::thread;
 use std::time::Duration;
 
-use sdl2::rect::Rect;
+use sdl2::event::{Event, EventPollIterator};
+use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::Window;
-use sdl2::keyboard::Scancode;
-use sdl2::event::{Event, EventPollIterator};
 
 use crate::direction::Direction;
-use crate::tile::Tile;
-use crate::map::Map;
-use crate::snake::Snake;
 use crate::font::Font;
-use crate::state::{State, Action};
+use crate::map::Map;
 use crate::menu::Menu;
+use crate::snake::Snake;
+use crate::state::{Action, State};
+use crate::tile::Tile;
 
 pub struct Game {
     snake: Snake,
@@ -153,17 +153,17 @@ impl State for Game {
                 );
             }
 
-            if self.snake.head.direction != next_direction &&
-                next_direction.opposite() != self.snake.head.direction
+            if self.snake.head.direction != next_direction
+                && next_direction.opposite() != self.snake.head.direction
             {
                 self.map.tiles[self.snake.head.x as usize][self.snake.head.y as usize] =
                     Tile::SnakeTurn(
                         next_direction,
                         match (self.snake.head.direction, next_direction) {
-                            (Direction::Right, Direction::Down) |
-                            (Direction::Down, Direction::Left) |
-                            (Direction::Left, Direction::Up) |
-                            (Direction::Up, Direction::Right) => true,
+                            (Direction::Right, Direction::Down)
+                            | (Direction::Down, Direction::Left)
+                            | (Direction::Left, Direction::Up)
+                            | (Direction::Up, Direction::Right) => true,
                             _ => false,
                         },
                     );
@@ -193,11 +193,11 @@ impl State for Game {
                     self.score += 1;
                     font.draw(canvas, 1, 0, &format!("Score: {}", self.score));
                 }
-                Tile::Wall(_) |
-                Tile::SnakeVertical |
-                Tile::SnakeHorizontal |
-                Tile::SnakeTurn(_, _) |
-                Tile::SnakeTail(_) => {
+                Tile::Wall(_)
+                | Tile::SnakeVertical
+                | Tile::SnakeHorizontal
+                | Tile::SnakeTurn(_, _)
+                | Tile::SnakeTail(_) => {
                     self.snake_alive = false;
                 }
                 _ => {}
@@ -217,14 +217,15 @@ impl State for Game {
         } else {
             for x in 0..32 {
                 for y in 0..23 {
-                    if !self.snake_show &&
-                        match self.map.tiles[x as usize][y as usize] {
-                            Tile::SnakeVertical |
-                            Tile::SnakeHorizontal |
-                            Tile::SnakeTurn(_, _) |
-                            Tile::SnakeTail(_) => true,
+                    if !self.snake_show
+                        && match self.map.tiles[x as usize][y as usize] {
+                            Tile::SnakeVertical
+                            | Tile::SnakeHorizontal
+                            | Tile::SnakeTurn(_, _)
+                            | Tile::SnakeTail(_) => true,
                             _ => false,
-                        } {
+                        }
+                    {
                         let target_rect = Rect::new(x * 10, 10 + y * 10, 10, 10);
                         canvas.set_draw_color(Color::RGB(215, 227, 244));
                         canvas.fill_rect(target_rect).unwrap();
@@ -281,7 +282,7 @@ fn update_tile(canvas: &mut Canvas<Window>, tiles: &Texture, map: &Map, x: i32, 
                     tiles,
                     Some(Rect::new(
                         match tile {
-                            Tile::Wall(i) => 150 + 10 * i as i32,
+                            Tile::Wall(i) => 150 + 10 * i32::from(i),
                             Tile::Food => 140,
                             Tile::SnakeVertical => 120,
                             Tile::SnakeHorizontal => 130,
@@ -293,14 +294,14 @@ fn update_tile(canvas: &mut Canvas<Window>, tiles: &Texture, map: &Map, x: i32, 
                             Tile::SnakeHead(Direction::Right) => 10,
                             Tile::SnakeHead(Direction::Down) => 20,
                             Tile::SnakeHead(Direction::Left) => 30,
-                            Tile::SnakeTurn(Direction::Up, false) |
-                            Tile::SnakeTurn(Direction::Left, true) => 110,
-                            Tile::SnakeTurn(Direction::Right, false) |
-                            Tile::SnakeTurn(Direction::Up, true) => 80,
-                            Tile::SnakeTurn(Direction::Down, false) |
-                            Tile::SnakeTurn(Direction::Right, true) => 90,
-                            Tile::SnakeTurn(Direction::Left, false) |
-                            Tile::SnakeTurn(Direction::Down, true) => 100,
+                            Tile::SnakeTurn(Direction::Up, false)
+                            | Tile::SnakeTurn(Direction::Left, true) => 110,
+                            Tile::SnakeTurn(Direction::Right, false)
+                            | Tile::SnakeTurn(Direction::Up, true) => 80,
+                            Tile::SnakeTurn(Direction::Down, false)
+                            | Tile::SnakeTurn(Direction::Right, true) => 90,
+                            Tile::SnakeTurn(Direction::Left, false)
+                            | Tile::SnakeTurn(Direction::Down, true) => 100,
                             _ => unreachable!(),
                         },
                         0,

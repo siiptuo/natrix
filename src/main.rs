@@ -1,20 +1,17 @@
-extern crate sdl2;
-extern crate rand;
-
 use sdl2::surface::Surface;
 
-mod game;
-mod font;
-mod snake;
 mod direction;
+mod font;
+mod game;
 mod map;
-mod tile;
-mod state;
 mod menu;
+mod snake;
+mod state;
+mod tile;
 
 use crate::font::Font;
 use crate::menu::Menu;
-use crate::state::{State, Action};
+use crate::state::{Action, State};
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
