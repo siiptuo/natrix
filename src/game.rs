@@ -9,13 +9,13 @@ use sdl2::video::Window;
 use sdl2::keyboard::Scancode;
 use sdl2::event::{Event, EventPollIterator};
 
-use direction::Direction;
-use tile::Tile;
-use map::Map;
-use snake::Snake;
-use font::Font;
-use state::{State, Action};
-use menu::Menu;
+use crate::direction::Direction;
+use crate::tile::Tile;
+use crate::map::Map;
+use crate::snake::Snake;
+use crate::font::Font;
+use crate::state::{State, Action};
+use crate::menu::Menu;
 
 pub struct Game {
     snake: Snake,

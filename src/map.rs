@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::fs::File;
 
-use tile::Tile;
+use crate::tile::Tile;
 
 #[derive(Clone)]
 pub struct Map {
@@ -30,11 +30,11 @@ impl Map {
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Map, MapError> {
-        let file = try!(File::open(path).map_err(MapError::Io));
+        let file = r#try!(File::open(path).map_err(MapError::Io));
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
         let name = match lines.next() {
-            Some(line) => try!(line.map_err(MapError::Io)),
+            Some(line) => r#try!(line.map_err(MapError::Io)),
             None => return Err(MapError::InvalidFormat("name required".to_string())),
         }.trim()
             .to_string();
@@ -46,7 +46,7 @@ impl Map {
         let mut tiles = [[Tile::Empty; 23]; 32];
         let mut snake_pos = None;
         for (y, line) in lines.take(23).enumerate() {
-            for (x, c) in try!(line.map_err(MapError::Io))
+            for (x, c) in r#try!(line.map_err(MapError::Io))
                 .chars()
                 .take(32)
                 .enumerate()
@@ -60,7 +60,7 @@ impl Map {
             }
         }
         let (snake_x, snake_y) =
-            try!(snake_pos.ok_or(MapError::InvalidFormat("no snake".to_string())));
+            r#try!(snake_pos.ok_or(MapError::InvalidFormat("no snake".to_string())));
 
         for x in 0..32 {
             for y in 0..23 {

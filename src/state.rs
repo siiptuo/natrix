@@ -2,7 +2,7 @@ use sdl2::event::EventPollIterator;
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::Window;
 
-use font::Font;
+use crate::font::Font;
 
 pub enum Action {
     None,

@@ -8,10 +8,10 @@ use sdl2::pixels::Color;
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::Window;
 
-use font::Font;
-use game::Game;
-use map::Map;
-use state::{State, Action};
+use crate::font::Font;
+use crate::game::Game;
+use crate::map::Map;
+use crate::state::{State, Action};
 
 pub struct Menu {
     maps: Vec<Map>,

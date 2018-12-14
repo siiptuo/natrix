@@ -1,4 +1,4 @@
-use direction::Direction;
+use crate::direction::Direction;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Tile {

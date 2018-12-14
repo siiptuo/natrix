@@ -1,4 +1,4 @@
-use direction::Direction;
+use crate::direction::Direction;
 
 pub struct SnakeEnd {
     pub x: i32,

@@ -2,6 +2,7 @@
 name = "natrix"
 version = "0.1.0"
 authors = ["Tuomas Siipola <siiptuo@kapsi.fi>"]
+edition = "2018"
 
 [dependencies]
 sdl2 = "0.30"

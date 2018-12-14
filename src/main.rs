@@ -12,9 +12,9 @@ mod tile;
 mod state;
 mod menu;
 
-use font::Font;
-use menu::Menu;
-use state::{State, Action};
+use crate::font::Font;
+use crate::menu::Menu;
+use crate::state::{State, Action};
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
