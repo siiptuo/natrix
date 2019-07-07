@@ -73,6 +73,7 @@ impl State for Game {
         canvas: &mut Canvas<Window>,
         font: &Font,
         tiles: &Texture,
+        _logo: &Texture,
     ) -> Action {
         let mut next_direction = self.snake.head.direction;
 

@@ -17,5 +17,6 @@ pub trait State {
         canvas: &mut Canvas<Window>,
         font: &Font,
         tiles: &Texture,
+        logo: &Texture,
     ) -> Action;
 }

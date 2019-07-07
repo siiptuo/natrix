@@ -30,6 +30,10 @@ fn main() {
         .create_texture_from_surface(Surface::load_bmp("data/images/tiles.bmp").unwrap())
         .unwrap();
 
+    let logo = texture_creator
+        .create_texture_from_surface(Surface::load_bmp("data/images/logo.bmp").unwrap())
+        .unwrap();
+
     let font = Font::load_bmp(&texture_creator, "data/images/NeoSans.bmp");
 
     let mut event_pump = sdl_context.event_pump().unwrap();
@@ -37,7 +41,7 @@ fn main() {
     let mut current_state: Box<State> = Box::new(Menu::new());
 
     loop {
-        match current_state.update(event_pump.poll_iter(), &mut canvas, &font, &tiles) {
+        match current_state.update(event_pump.poll_iter(), &mut canvas, &font, &tiles, &logo) {
             Action::Quit => break,
             Action::Change(next_state) => current_state = next_state,
             Action::None => {}

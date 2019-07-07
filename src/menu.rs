@@ -5,6 +5,7 @@ use std::time::Duration;
 use sdl2::event::{Event, EventPollIterator};
 use sdl2::keyboard::Scancode;
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::Window;
 
@@ -51,6 +52,7 @@ impl State for Menu {
         canvas: &mut Canvas<Window>,
         font: &Font,
         tiles: &Texture,
+        logo: &Texture,
     ) -> Action {
         for event in events {
             match event {
@@ -87,15 +89,18 @@ impl State for Menu {
             }
         }
 
-        canvas.set_draw_color(Color::RGB(255, 255, 255));
+        canvas.set_draw_color(Color::RGB(215, 227, 244));
         canvas.clear();
-        font.draw(canvas, 10, 10, "Natrix");
+
+        canvas
+            .copy(logo, None, Rect::new((320 - 175) / 2, 40, 175, 40))
+            .unwrap();
 
         for (i, map) in self.maps.iter().enumerate() {
             font.draw(
                 canvas,
-                if i == self.selected_map { 20 } else { 10 },
-                30 + i as i32 * 10,
+                if i == self.selected_map { 120 } else { 110 },
+                110 + i as i32 * 10,
                 &map.name,
             );
         }
