@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2019 Tuomas Siipola
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::{Canvas, Texture, TextureCreator};

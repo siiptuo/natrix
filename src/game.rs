@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2019 Tuomas Siipola
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use rand::{thread_rng, Rng};
 use std::thread;
 use std::time::Duration;

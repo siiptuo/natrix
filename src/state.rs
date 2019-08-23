@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2019 Tuomas Siipola
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use sdl2::event::EventPollIterator;
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::Window;

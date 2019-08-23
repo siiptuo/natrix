@@ -1,8 +1,12 @@
+# SPDX-FileCopyrightText: 2019 Tuomas Siipola
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 [package]
 name = "natrix"
 version = "0.1.0"
 authors = ["Tuomas Siipola <siiptuo@kapsi.fi>"]
 edition = "2018"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 sdl2 = "0.32.2"

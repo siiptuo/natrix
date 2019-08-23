@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2019 Tuomas Siipola
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};

@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files: screenshot.png data/*
+Copyright: 2016 Tuomas Siipola
+License: CC0-1.0
+
+Files: data/images/NeoSans.bmp
+Copyright: 2015 usr_share
+License: CC0-1.0
+Comment: https://opengameart.org/content/new-original-grafx2-font-collection
