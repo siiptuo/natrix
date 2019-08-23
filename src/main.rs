@@ -41,7 +41,7 @@ fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
-    let mut current_state: Box<State> = Box::new(Menu::new());
+    let mut current_state: Box<dyn State> = Box::new(Menu::new());
 
     loop {
         match current_state.update(event_pump.poll_iter(), &mut canvas, &font, &tiles, &logo) {

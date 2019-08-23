@@ -10,7 +10,7 @@ use crate::font::Font;
 pub enum Action {
     None,
     Quit,
-    Change(Box<State>),
+    Change(Box<dyn State>),
 }
 
 pub trait State {
