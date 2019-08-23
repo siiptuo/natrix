@@ -26,7 +26,7 @@ fn main() {
         .build()
         .unwrap();
 
-    let mut canvas = window.into_canvas().build().unwrap();
+    let mut canvas = window.into_canvas().software().build().unwrap();
     let texture_creator = canvas.texture_creator();
 
     let tiles = texture_creator
