@@ -8,6 +8,11 @@ authors = ["Tuomas Siipola <siiptuo@kapsi.fi>"]
 edition = "2018"
 license = "GPL-3.0-or-later"
 
+[profile.release]
+lto = true
+codegen-units = 1
+panic = 'abort'
+
 [dependencies]
 sdl2 = "0.32.2"
 rand = "0.7.0"
