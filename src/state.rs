@@ -18,7 +18,7 @@ pub trait State {
         &mut self,
         events: EventPollIterator,
         canvas: &mut Canvas<Window>,
-        font: &Font,
+        font: &mut Font,
         tiles: &Texture,
         logo: &Texture,
     ) -> Action;

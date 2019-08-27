@@ -44,9 +44,7 @@ impl<'a> Font<'a> {
                 }
             }
         });
-        surface
-            .set_color_key(true, Color::RGB(211, 203, 207))
-            .unwrap();
+        surface.set_color_key(true, Color::RGB(0, 0, 0)).unwrap();
         Font {
             texture: texture_creator
                 .create_texture_from_surface(surface)
@@ -59,8 +57,9 @@ impl<'a> Font<'a> {
         self.characters[byte as usize - '!' as usize]
     }
 
-    pub fn draw(&self, canvas: &mut Canvas<Window>, x: i32, y: i32, text: &str) {
+    pub fn draw(&mut self, canvas: &mut Canvas<Window>, x: i32, y: i32, text: &str, color: Color) {
         let mut position = x;
+        self.texture.set_color_mod(color.r, color.g, color.b);
         for byte in text.bytes() {
             position += if byte == b' ' {
                 SPACE_WIDTH as i32

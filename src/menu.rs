@@ -53,7 +53,7 @@ impl State for Menu {
         &mut self,
         events: EventPollIterator,
         canvas: &mut Canvas<Window>,
-        font: &Font,
+        font: &mut Font,
         tiles: &Texture,
         logo: &Texture,
     ) -> Action {
@@ -105,6 +105,7 @@ impl State for Menu {
                 if i == self.selected_map { 120 } else { 110 },
                 110 + i as i32 * 10,
                 &map.name,
+                Color::RGB(0, 0, 0),
             );
         }
 

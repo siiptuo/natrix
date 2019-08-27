@@ -30,18 +30,25 @@ pub struct Game {
 }
 
 impl Game {
-    fn redraw(canvas: &mut Canvas<Window>, font: &Font, tiles: &Texture, game: &Game) {
+    fn redraw(canvas: &mut Canvas<Window>, font: &mut Font, tiles: &Texture, game: &Game) {
         canvas.set_draw_color(Color::RGB(255, 255, 255));
         canvas.clear();
 
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.fill_rect(Rect::new(0, 0, 320, 10)).unwrap();
-        font.draw(canvas, 1, 0, &format!("Score: {}", game.score));
+        font.draw(
+            canvas,
+            1,
+            0,
+            &format!("Score: {}", game.score),
+            Color::RGB(255, 255, 255),
+        );
         font.draw(
             canvas,
             ((320 - font.measure(&game.map.name)) / 2) as i32,
             0,
             &game.map.name,
+            Color::RGB(255, 255, 255),
         );
 
         for x in 0..32 {
@@ -51,7 +58,7 @@ impl Game {
         }
     }
 
-    pub fn new(canvas: &mut Canvas<Window>, font: &Font, tiles: &Texture, map: &Map) -> Game {
+    pub fn new(canvas: &mut Canvas<Window>, font: &mut Font, tiles: &Texture, map: &Map) -> Game {
         let mut game = Game {
             snake: Snake::new(map.snake_x as i32, map.snake_y as i32, Direction::Right),
             snake_alive: true,
@@ -74,7 +81,7 @@ impl State for Game {
         &mut self,
         events: EventPollIterator,
         canvas: &mut Canvas<Window>,
-        font: &Font,
+        font: &mut Font,
         tiles: &Texture,
         _logo: &Texture,
     ) -> Action {
@@ -195,7 +202,12 @@ impl State for Game {
                     place_food(&mut self.map, canvas, tiles);
                     self.snake.grow += 5;
                     self.score += 1;
-                    font.draw(canvas, 1, 0, &format!("Score: {}", self.score));
+                    let text = format!("Score: {}", self.score);
+                    canvas.set_draw_color(Color::RGB(0, 0, 0));
+                    canvas
+                        .fill_rect(Rect::new(0, 0, font.measure(&text), 10))
+                        .unwrap();
+                    font.draw(canvas, 1, 0, &text, Color::RGB(255, 255, 255));
                 }
                 Tile::Wall(_)
                 | Tile::SnakeVertical
@@ -244,6 +256,7 @@ impl State for Game {
                     320 - 1 - font.measure("R restart   M menu") as i32,
                     0,
                     "R restart   M menu",
+                    Color::RGB(255, 255, 255),
                 );
             } else {
                 canvas.set_draw_color(Color::RGB(0, 0, 0));
