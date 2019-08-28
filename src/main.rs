@@ -20,13 +20,17 @@ fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
+    let scale = 2;
+
     let window = video_subsystem
-        .window("Natrix", 320, 240)
+        .window("Natrix", scale * 320, scale * 240)
         .position_centered()
         .build()
         .unwrap();
 
     let mut canvas = window.into_canvas().software().build().unwrap();
+    canvas.set_scale(scale as f32, scale as f32).unwrap();
+
     let texture_creator = canvas.texture_creator();
 
     let tiles = texture_creator
