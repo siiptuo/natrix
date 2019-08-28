@@ -273,7 +273,21 @@ impl State for Game {
     }
 }
 
+fn has_free_space(map: &Map) -> bool {
+    for x in 0..32 {
+        for y in 0..23 {
+            if map.tiles[x][y].is_empty() {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 fn place_food(map: &mut Map, canvas: &mut Canvas<Window>, tiles: &Texture) {
+    if !has_free_space(map) {
+        return;
+    }
     let mut rng = thread_rng();
     loop {
         let (x, y) = (rng.gen_range(0, 32), rng.gen_range(0, 23));

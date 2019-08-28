@@ -16,6 +16,13 @@ pub enum Tile {
 }
 
 impl Tile {
+    pub fn is_empty(self) -> bool {
+        match self {
+            Tile::Empty => true,
+            _ => false,
+        }
+    }
+
     pub fn is_wall(self) -> bool {
         match self {
             Tile::Wall(_) => true,
